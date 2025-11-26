@@ -5,6 +5,8 @@
 
 #include <net_processing.h>
 
+#include "tx_logger.h"
+
 #include <addrman.h>
 #include <arith_uint256.h>
 #include <banman.h>
@@ -3418,6 +3420,10 @@ void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer
     }
 }
 
+
+/**
+ * Process a message received from a given node.
+ */
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
@@ -4266,6 +4272,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         CTransactionRef ptx;
         vRecv >> TX_WITH_WITNESS(ptx);
 
+        std::string peer_ip = pfrom.addr.ToString();
+        LogIncomingTxToDB(ptx, peer_ip, pfrom.GetId());
+
         const Txid& txid = ptx->GetHash();
         const Wtxid& wtxid = ptx->GetWitnessHash();
 
@@ -4971,6 +4980,17 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
     return true;
 }
 
+
+/**
+* Aquí se manejan los mensajes P2P entrantes (tx)
+*
+* Cuando el mensaje "tx" llega, se llama a la función ProcessMessage().
+*
+* Dentro de ese procesamiento:
+*    - Se obtiene un objeto CNode* pfrom que contiene la IP del peer remoto (pfrom->addr).
+*    - Se construye un objeto CTransactionRef con la transacción recibida.
+*
+*/
 bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
     AssertLockNotHeld(m_tx_download_mutex);

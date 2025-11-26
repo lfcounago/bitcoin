@@ -298,6 +298,7 @@ endif()
 
 # Bitcoin Core bitcoind.
 if(BUILD_DAEMON)
+  find_package(SQLite3 3.7.17 REQUIRED)
   add_executable(bitcoind
     bitcoind.cpp
     init/bitcoind.cpp
@@ -308,7 +309,9 @@ if(BUILD_DAEMON)
     core_interface
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    ${SQLITE3_LIBRARIES}
   )
+  target_include_directories(bitcoind PRIVATE ${SQLITE3_INCLUDE_DIRS})
   install_binary_component(bitcoind HAS_MANPAGE)
 endif()
 if(ENABLE_IPC AND BUILD_DAEMON)
@@ -321,7 +324,9 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     bitcoin_node
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    ${SQLITE3_LIBRARIES}
   )
+  target_include_directories(bitcoin-node PRIVATE ${SQLITE3_INCLUDE_DIRS})
   install_binary_component(bitcoin-node INTERNAL)
 endif()
 

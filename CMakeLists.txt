@@ -635,6 +635,8 @@ endif()
 add_subdirectory(test)
 add_subdirectory(doc)
 
+find_package(SQLite3 3.7.17 REQUIRED)
+
 add_subdirectory(src)
 
 include(Maintenance)
